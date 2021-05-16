@@ -9,9 +9,12 @@ def chunkify(lst, n):
 
 def main():
 
-    files = [os.path.splitext(f)[0] for f in os.listdir(src_path)]
+    files = [os.path.splitext(f)[0] for f in os.listdir(src_path) if f.endswith('.tif')]
 
-    if len(files) % per_batch:
+    if not files:
+        raise FileNotFoundError(f"No images found in {src_path}")
+
+    elif len(files) % per_batch:
         raise FileNotFoundError("Number of photos does not split evenly")
 
     files.sort(key=int)
@@ -38,7 +41,7 @@ if __name__ == '__main__':
 
     dest_path = os.path.join(base_path, 'source')
 
-    if os.listdir(dest_path):
+    if [f for f in os.listdir(dest_path) if os.path.isdir(os.path.join(dest_path, f))]:
         raise FileExistsError(f'{dest_path} is not empty. Please empty the folder and re-run.')
 
     main()

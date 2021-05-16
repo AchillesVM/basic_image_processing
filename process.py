@@ -50,6 +50,9 @@ def main():
 
     folders = [f for f in os.listdir(src_path) if os.path.isdir(os.path.join(src_path, f))]
 
+    if not folders:
+        raise FileNotFoundError("No source images found. You may need to run the pre-processing script.")
+
     for folder in folders:
 
         process_batch(folder)
