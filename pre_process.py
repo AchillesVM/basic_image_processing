@@ -2,6 +2,8 @@ import os
 import sys
 import shutil
 
+FILE_EXT = '.png'
+
 def chunkify(lst, n):
 
     for i in range(0, len(lst), n):
@@ -9,7 +11,7 @@ def chunkify(lst, n):
 
 def main():
 
-    files = [os.path.splitext(f)[0] for f in os.listdir(src_path) if f.endswith('.tif')]
+    files = [os.path.splitext(f)[0] for f in os.listdir(src_path) if f.endswith(FILE_EXT)]
 
     if not files:
         raise FileNotFoundError(f"No images found in {src_path}")
@@ -28,7 +30,7 @@ def main():
 
         for file in chunk:
 
-            shutil.copy(os.path.join(src_path, f'{file}.tif'), os.path.join(chunk_path, f'{file}.tif'))
+            shutil.copy(os.path.join(src_path, f'{file}{FILE_EXT}'), os.path.join(chunk_path, f'{file}{FILE_EXT}'))
             
     
 if __name__ == '__main__':

@@ -3,6 +3,8 @@ from PIL import Image
 from copy import copy
 import numpy as np
 
+FILE_EXT = '.png'
+
 def open_image(file_path):
 
     image = Image.open(file_path)
@@ -15,7 +17,7 @@ def save_image(data, folder, filename):
 
     image = Image.fromarray(data)
 
-    file_path = os.path.join(dest_path, folder, f'{filename}.tif')
+    file_path = os.path.join(dest_path, folder, f'{filename}{FILE_EXT}')
 
     image.save(file_path)
 
@@ -34,7 +36,7 @@ def process_batch(folder):
 
     folder_path = os.path.join(src_path, folder)
 
-    file_paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith('.tif')]
+    file_paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(FILE_EXT)]
 
     data = np.array([open_image(fp) for fp in file_paths])
 
