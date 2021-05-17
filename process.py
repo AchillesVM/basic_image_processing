@@ -38,7 +38,7 @@ def save_image(data: np.array, folder: str, filename: str) -> None:
     data = (65535*((data - data.min())/data.ptp())).astype(np.uint16)
 
     # create file in binary write mode
-    with open(os.path.join(dest_path, folder, f'{filename}{FILE_EXT}'), 'wb') as f:
+    with open(os.path.join(dest_path, folder, f'{filename}.png'), 'wb') as f:
 
         # isntantiate png writer
         writer = png.Writer(width=data.shape[1], height=data.shape[0], bitdepth=16, greyscale=False)
