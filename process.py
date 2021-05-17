@@ -1,10 +1,13 @@
 import os
+import tqdm
 from PIL import Image
 from copy import copy
 from typing import Callable
+from multiprocessing import Pool
 import numpy as np
 
 FILE_EXT = '.png'
+N_PROC = 4
 
 
 def open_image(file_path: str) -> np.array:
@@ -24,7 +27,7 @@ def open_image(file_path: str) -> np.array:
     return data
 
 
-def save_image(data: np.array, folder: str, filename: str) -> None:
+def save_image(data: np.array, dest_path, folder: str, filename: str) -> None:
     """ Given an image in array form, save the image in the specified folder with the
     specified filename.
 
@@ -37,7 +40,7 @@ def save_image(data: np.array, folder: str, filename: str) -> None:
     image = Image.fromarray(data)
 
     # define filepath to save the image to
-    file_path = os.path.join(dest_path, folder, f'{filename}{FILE_EXT}')
+    file_path = os.path.join(dest_path, folder, filename)
 
     # save the image
     image.save(file_path)
@@ -79,18 +82,21 @@ def process_images(data: np.array, func: Callable) -> np.array:
     return data
 
 
-def process_batch(folder: str) -> None:
+def process_batch(args) -> None:
     """ Given the name of a sub-folder, process the images and save the results of both
     the 'lighten' and 'darken' operations in the destination folder.
 
     :param folder: The name of the sub-folder to process
     """
 
+    # deserialise arguments
+    (folder, file_ext, src_path, dest_path) = args
+
     # define folder path for the batch e.g. /results/1
     folder_path = os.path.join(src_path, folder)
 
     # get the full paths of all the valid files in the source folder
-    file_paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(FILE_EXT)]
+    file_paths = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(file_ext)]
 
     # generate array of all image arrays
     data = np.array([open_image(fp) for fp in file_paths])
@@ -99,13 +105,14 @@ def process_batch(folder: str) -> None:
     lightened = process_images(copy(data), np.argmax)
 
     # save lightened image to folder
-    save_image(lightened, 'Lighten', folder)
+    save_image(lightened, dest_path, 'Lighten', folder + file_ext)
 
     # generate darkened image
     darkened = process_images(copy(data), np.argmin)
 
     # save darkened image to folder
-    save_image(darkened, 'Darken', folder)
+    save_image(darkened, dest_path, 'Darken', folder + file_ext)
+
 
 
 def get_next_batch() -> int:
@@ -138,17 +145,18 @@ def main() -> None:
     """
 
     # get list of all sub-folders in the source directory
-    folders = [f for f in os.listdir(src_path) if os.path.isdir(os.path.join(src_path, f))]
+    folders = [(f, FILE_EXT, src_path, dest_path) for f in os.listdir(src_path) if os.path.isdir(os.path.join(src_path, f))]
 
     # check that there are actually folders there
     if not folders:
         raise FileNotFoundError("No source images found. You may need to run the pre-processing script.")
 
-    # iterate through the batches
-    for folder in folders:
+    # create pool of processes
+    with Pool(N_PROC) as p:
 
-        # process batch
-        process_batch(folder)
+        # iterate through the batches
+        for _ in tqdm.tqdm(p.imap_unordered(process_batch, folders), total=len(folders)):
+            pass
 
 
 if __name__ == '__main__':
