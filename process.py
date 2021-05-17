@@ -3,6 +3,7 @@ from PIL import Image
 from copy import copy
 from typing import Callable
 import numpy as np
+import png
 
 FILE_EXT = '.png'
 
@@ -33,14 +34,20 @@ def save_image(data: np.array, folder: str, filename: str) -> None:
     :param filename:    The filename to save the image under
     """
 
-    # generate image object from array
-    image = Image.fromarray(data)
+    # convert to 16 bit integers
+    data = (65535*((data - data.min())/data.ptp())).astype(np.uint16)
 
-    # define filepath to save the image to
-    file_path = os.path.join(dest_path, folder, f'{filename}{FILE_EXT}')
+    # create file in binary write mode
+    with open(os.path.join(dest_path, folder, f'{filename}{FILE_EXT}'), 'wb') as f:
 
-    # save the image
-    image.save(file_path)
+        # isntantiate png writer
+        writer = png.Writer(width=data.shape[1], height=data.shape[0], bitdepth=16, greyscale=False)
+
+        # flaten array
+        data = data.reshape(-1, data.shape[1]*data.shape[2]).tolist()
+
+        # write to file
+        writer.write(f, data)
 
 
 def process_images(data: np.array, func: Callable) -> np.array:
